@@ -1,0 +1,136 @@
+from dotenv import load_dotenv
+load_dotenv()
+
+import json
+from openai_keyword_generator.main import generate_amazon_products, generate_paragraph
+from amazon_product_retriever.main import get_amazon_product_links_by_keyword
+import asyncio
+import aiohttp
+from datetime import datetime, timedelta
+import pathlib
+import logging
+from datetime import datetime
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Constants
+MAX_TOKENS_PER_MINUTE = 50_000
+MAX_REQUESTS_PER_MINUTE = 400
+MAX_REQUESTS_PER_DAY = 10_000
+BATCH_SIZE = 10 # Reduced batch size for better control
+TOKEN_RESET_INTERVAL = 60  # Time in seconds for token reset
+
+async def get_new_domains(articles, session):
+    async with session.post("http://localhost:4000/filter-new-domains", json=articles) as response:
+        if response.status == 200:
+            new_articles = await response.json()
+            # print(new_articles)
+            return new_articles['data']
+        else:
+            print(f"Error fetching new domains: {response.json()}")
+            return []
+
+async def process_article(session, article):
+    # Here, add your logic to process each URL through your APIs
+    # For example:
+    # 1. Send URL to OpenAI and get data
+    # 2. Send data to Amazon API and get response
+    # 3. Send Amazon response back to OpenAI
+    # Return the final data to be batched for database upload
+    article_with_product_names, tokens_used = await generate_amazon_products(article)
+    current_dir = pathlib.Path(__file__).parent
+    
+    if not article_with_product_names:
+        with open(current_dir / "data/failed_articles.json", 'w') as outfile:
+            failed_articles = json.load(outfile)
+            failed_articles.append(article)
+            json.dump(failed_articles, outfile)
+        
+        return None
+    
+    article_with_product_names = json.loads(article_with_product_names)
+
+    article_with_product_links = {'url': article['url'], "products": []}
+    for product_name in article_with_product_names['products']:
+
+        product = await get_amazon_product_links_by_keyword(product_name)
+        if product:
+            product['url'] = article['url']
+            article_with_product_links['products'].append(product)
+    
+    article_with_product_links['title'] = article['title']
+    article_with_product_links['paragraph'] = article['paragraph']
+    injected_paragraph_html, tokens_used_2 = await generate_paragraph(article_with_product_links)
+    
+    article_with_product_links['injected_paragraph'] = injected_paragraph_html
+    return article_with_product_links, tokens_used + tokens_used_2
+    
+
+async def upload_to_database(batch_data, session):
+    # Implement your logic to upload batch_data to the database
+    async with session.post("http://localhost:4000/add-domains", json=batch_data) as response:
+        print(await response.json())
+    async with session.post("http://localhost:4000/add-links", json=batch_data) as response:
+        print(await response.json())
+    async with session.post("http://localhost:4000/update-domains", json=batch_data) as response:
+        print(await response.json())
+
+
+async def main(filepath):
+    with open(str(filepath), encoding='utf-8') as infile:
+        articles = json.load(infile)[:100]
+
+        batch_data = []
+        total_requests_made_today = 0
+        tokens_remaining = MAX_TOKENS_PER_MINUTE
+        last_token_reset = datetime.now()
+
+        async with aiohttp.ClientSession() as session:
+            new_domains = await get_new_domains(articles, session)
+            if not new_domains:
+                print("No new domains to process.")
+                return
+            tasks = [process_article(session, article) for article in new_domains]
+
+            while tasks:
+                if datetime.now() - last_token_reset >= timedelta(seconds=TOKEN_RESET_INTERVAL):
+                    tokens_remaining = MAX_TOKENS_PER_MINUTE
+                    last_token_reset = datetime.now()
+
+                current_batch, tasks = tasks[:BATCH_SIZE], tasks[BATCH_SIZE:]
+                try:
+                    results = await asyncio.gather(*current_batch)
+
+                    for data, tokens_used in results:
+                        if data:
+                            batch_data.append(data)
+                            tokens_remaining -= tokens_used
+                            total_requests_made_today += 1
+
+                            if total_requests_made_today >= MAX_REQUESTS_PER_DAY:
+                                print("Reached daily request limit.")
+                                break
+
+                    if batch_data:
+                        await upload_to_database(batch_data, session)
+                        batch_data.clear()
+
+                    time_to_sleep = TOKEN_RESET_INTERVAL / MAX_REQUESTS_PER_MINUTE - (datetime.now() - last_token_reset).total_seconds()
+                    time_to_sleep = max(0, time_to_sleep)
+                    await asyncio.sleep(time_to_sleep)
+
+                except aiohttp.ClientResponseError as e:
+                    if e.status == 429:
+                        retry_after = int(e.headers.get("Retry-After", 10))  # Default to 10 seconds if header is missing
+                        print(f"Rate limit reached. Pausing for {retry_after} seconds.")
+                        await asyncio.sleep(retry_after)
+
+if __name__ == "__main__":
+    start_time = datetime.now()
+    logging.info("Script started")
+    root_dir = pathlib.Path(__file__).parent
+    crawled_articles_path = root_dir / 'data/articles.json'  # Replace with your CSV file path
+    asyncio.run(main(crawled_articles_path))
+    end_time = datetime.now()
+    elapsed_time = end_time - start_time
+    logging.info(f"Script ended. Total elapsed time: {elapsed_time}")

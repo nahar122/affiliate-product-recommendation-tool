@@ -1,0 +1,29 @@
+services:
+  flask-app:
+    container_name: flask-app
+    build: app
+    restart: always
+    ports:
+      - "5000:4000"
+    networks:
+      - backend
+
+  mysql-db:
+    container_name: mysql-db
+    image: mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=saias122
+      - MYSQL_DATABASE=osradar
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - backend
+
+volumes:
+  mysql-data:
+
+networks:
+  backend:

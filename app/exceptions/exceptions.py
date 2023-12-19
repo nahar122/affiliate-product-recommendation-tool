@@ -1,0 +1,5 @@
+
+class MissingEnvironmentVariable(Exception):
+    pass
+
+
