@@ -12,6 +12,7 @@ charset-normalizer==3.3.2
 click==8.1.7
 colorama==0.4.6
 constantly==23.10.4
+crochet==2.1.1
 cryptography==41.0.7
 cssselect==1.2.0
 distro==1.8.0
@@ -56,6 +57,7 @@ pydantic==2.5.2
 pydantic_core==2.14.5
 PyDispatcher==2.0.7
 PyJWT==2.8.0
+PyMySQL==1.1.0
 pyOpenSSL==23.3.0
 python-dotenv==1.0.0
 queuelib==1.6.2
@@ -69,9 +71,11 @@ SQLAlchemy==2.0.23
 tldextract==5.1.1
 tqdm==4.66.1
 Twisted==22.10.0
+# twisted-iocpsupport==1.0.4
 typing_extensions==4.9.0
 urllib3==2.1.0
 w3lib==2.1.2
 Werkzeug==3.0.1
+wrapt==1.16.0
 yarl==1.9.4
 zope.interface==6.1
