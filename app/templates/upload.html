@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Upload File</title>
+    <!-- <script>
+      function validateForm() {
+        var fileInput = document.getElementById("file");
+        var titleInput = document.getElementById("title");
+        var paragraphInput = document.getElementById("paragraph");
+        var submitButton = document.getElementById("submit");
+
+        var isFileSelected =
+          fileInput.value && fileInput.files[0].type === "text/csv";
+        var isTitleFilled = titleInput.value.trim() !== "";
+        var isParagraphFilled = paragraphInput.value.trim() !== "";
+
+        submitButton.disabled = !(
+          isFileSelected &&
+          isTitleFilled &&
+          isParagraphFilled
+        );
+      }
+
+      function updateLabelsAndPlaceholders() {
+        var selector = document.getElementById("attributeSelector");
+        var titleLabel = document.getElementById("titleLabel");
+        var paragraphLabel = document.getElementById("paragraphLabel");
+        var titleInput = document.getElementById("title");
+        var paragraphInput = document.getElementById("paragraph");
+
+        if (selector.value === "id") {
+          titleLabel.textContent = "HTML ID for Article Title:";
+          paragraphLabel.textContent = "HTML ID for Article Paragraph:";
+          titleInput.placeholder = "Enter HTML ID";
+          paragraphInput.placeholder = "Enter HTML ID";
+        } else {
+          titleLabel.textContent = "HTML class for Article Title:";
+          paragraphLabel.textContent = "HTML class for Article Paragraph:";
+          titleInput.placeholder = "Enter HTML class";
+          paragraphInput.placeholder = "Enter HTML class";
+        }
+      }
+    </script> -->
+  </head>
+  <body>
+    <h2>Upload CSV File</h2>
+    <form method="post" enctype="multipart/form-data" action="/upload">
+      <label for="file">CSV File:</label><br />
+      <input
+        type="file"
+        name="file"
+        id="file"
+        accept=".csv"
+        onchange="validateForm()"
+      /><br /><br />
+
+      <!-- <label for="attributeSelector">Select Attribute Type:</label><br />
+      <select
+        id="attributeSelector"
+        name="attributeType"
+        onchange="updateLabelsAndPlaceholders()"
+      >
+        <option value="id" selected>ID</option>
+        <option value="class">Class</option></select
+      ><br /><br />
+
+      <label id="titleLabel" for="title">HTML ID for Article Title:</label
+      ><br />
+      <input
+        type="text"
+        name="title"
+        id="title"
+        placeholder="Enter HTML ID"
+        onkeyup="validateForm()"
+      /><br /><br />
+
+      <label id="paragraphLabel" for="paragraph"
+        >HTML ID for Article Paragraph:</label
+      ><br />
+      <input
+        type="text"
+        name="paragraph"
+        id="paragraph"
+        placeholder="Enter HTML ID"
+        onkeyup="validateForm()"
+      /><br /><br /> -->
+
+      <input type="submit" value="Upload" id="submit" />
+    </form>
+  </body>
+</html>

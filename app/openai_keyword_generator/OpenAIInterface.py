@@ -23,7 +23,7 @@ class OpenAIInterface():
             response = await self.client.chat.completions.create(
                 model=self.GPT_MODEL,
                 messages=self.messages,
-                max_tokens=4095,
+                max_tokens=2000,
                 temperature=0,
                 top_p=1,
                 frequency_penalty=0,
