@@ -113,7 +113,7 @@ def upload():
             article_urls = get_urls_from_csv(file)
             current_dir = pathlib.Path(__file__).parent
             unique_id = uuid.uuid4()
-            output_path = current_dir / f'data/articles_{unique_id}.json'  
+            output_path = current_dir / f'data/article_{unique_id}.json'  
             # Run spider and add callback for process_articles
             finished_event = Event()
 
