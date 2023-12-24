@@ -44,7 +44,7 @@ async def process_article(session, article, db_manager):
     current_dir = pathlib.Path(__file__).parent
     
     if not article_with_product_names:
-        with open(current_dir / "data/failed_articles.json", 'w') as outfile:
+        with open(current_dir / "data/failed_articles_.json", 'w') as outfile:
             failed_articles = json.load(outfile)
             failed_articles.append(article)
             json.dump(failed_articles, outfile)
@@ -52,6 +52,8 @@ async def process_article(session, article, db_manager):
         return None
     
     article_with_product_names = json.loads(article_with_product_names)
+
+    # print(article)
 
     article_with_product_links = {'url': article['url'], "products": []}
     for product_name in article_with_product_names['products']:
@@ -73,8 +75,7 @@ async def process_article(session, article, db_manager):
 
 async def main(filepath):
     with open(str(filepath), encoding='utf-8') as infile:
-        articles = json.load(infile)[:50]
-
+        articles = json.load(infile)
         batch_data = []
         total_requests_made_today = 0
         tokens_remaining = MAX_TOKENS_PER_MINUTE
@@ -119,11 +120,12 @@ async def main(filepath):
                         await asyncio.sleep(retry_after)
 
 
-def process_articles():
+def process_articles(unique_id):
     start_time = datetime.now()
     logging.info("Script started")
     root_dir = pathlib.Path(__file__).parent
-    crawled_articles_path = root_dir / 'data/articles.json'  # Replace with your CSV file path
+    
+    crawled_articles_path = root_dir / f'data/article_{unique_id}.json'  # Replace with your CSV file path
     asyncio.run(main(crawled_articles_path))
     end_time = datetime.now()
     elapsed_time = end_time - start_time

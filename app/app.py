@@ -1,3 +1,5 @@
+import uuid
+import json
 from flask import Flask, request, render_template, redirect, url_for, session, jsonify
 from flask_cors import CORS, cross_origin
 from dotenv import load_dotenv
@@ -37,13 +39,33 @@ def run_spider_with_urls(urls, outputfile, finished_event):
 def create_app():
     app = Flask(__name__)
     CORS(app)
-    app.secret_key = "my-secret-key"
+    app.secret_key = "$8AJ1MASnhas9KJl12n9Wis(@I)$*as"
     return app
 
 app = create_app()
 
 db_uri = f"mysql+pymysql://{os.environ.get('DB_USER')}:{os.environ.get('DB_PASS')}@{os.environ.get('DB_HOST')}/{os.environ.get('DB_NAME')}"
 db_manager = DatabaseManager(db_uri=db_uri)
+
+@app.route('/process-article', methods=['POST'])
+def process_single_article():
+    unique_id = uuid.uuid4()
+    current_dir = pathlib.Path(__file__).parent
+    article_path = current_dir / f'data/article_{unique_id}.json'
+    data = request.json
+    if 'url' in data and 'title' in data and 'paragraph' in data:
+        try:
+            json.dump([request.json], open(article_path, "w", encoding="utf-8"))
+            process_articles(unique_id)       
+            return jsonify({"success": True})
+        except Exception as e:
+            return jsonify({"success": False, "error": e})
+
+    return jsonify({"success": False, "error": "Missing required data in request body."})
+
+@app.route('/test-injection-route')
+def test_injection():
+    return render_template('test_injection.html')
 
 @app.route('/retrieve-url-data', methods=['POST'])
 def retrieve_url_data():
@@ -90,8 +112,8 @@ def upload():
         if file and file.filename.endswith('.csv'):
             article_urls = get_urls_from_csv(file)
             current_dir = pathlib.Path(__file__).parent
-            output_path = current_dir / 'data/articles.json'
-            
+            unique_id = uuid.uuid4()
+            output_path = current_dir / f'data/articles_{unique_id}.json'  
             # Run spider and add callback for process_articles
             finished_event = Event()
 
@@ -100,7 +122,7 @@ def upload():
             def wait_and_process():
                 finished_event.wait()
                 logging.info("Event set, running process_articles")
-                process_articles()
+                process_articles(unique_id)
 
             Thread(target=wait_and_process).start()
 

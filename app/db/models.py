@@ -8,7 +8,7 @@ Base = declarative_base()
 class Domain(Base):
     __tablename__ = 'domains'
     id = Column(Integer, primary_key=True)
-    domain = Column(String(255), nullable=False)
+    domain = Column(String(255), unique=True, nullable=False)
 
 class URL(Base):
     __tablename__ = 'urls'
@@ -66,35 +66,36 @@ class DatabaseManager:
             for data in url_data_list:
                 existing_url = self.db_session.query(URL).filter_by(url=data.get('url')).first()
                 if existing_url:
-                    logging.info(f"URL '{data.get('url')}' already exists in the database.")
-                    continue
+                    logging.info(f"URL '{data.get('url')}' already exists in the database, updating record.")
+                    existing_url.initial_article_paragraph = data.get('initial_article_paragraph')
+                    existing_url.article_title = data.get('article_title')
+                    existing_url.injected_article_paragraph = data.get('injected_article_paragraph')
+                else:
+                    new_url = URL(
+                        url=data.get('url'),
+                        domain_id=data.get('domain_id'),
+                        article_title=data.get('article_title', None),
+                        initial_article_paragraph=data.get('initial_article_paragraph', None),
+                        injected_article_paragraph=data.get('injected_article_paragraph', None)
+                    )
+                    self.db_session.add(new_url)
+                    self.db_session.flush()  # Flush to assign an ID without committing
+                    logging.info(f"URL '{data.get('url')}' added to the database.")
 
-                new_url = URL(
-                    url=data.get('url'),
-                    domain_id=data.get('domain_id'),
-                    article_title=data.get('article_title', None),
-                    initial_article_paragraph=data.get('initial_article_paragraph', None),
-                    injected_article_paragraph=data.get('injected_article_paragraph', None)
-                )
-                self.db_session.add(new_url)
-                self.db_session.flush()  # Flush to assign an ID without committing
-
-                logging.info(f"URL '{data.get('url')}' added to the database.")
-
-                products = data.get("products")
-                if products:
-                    for product in products:
-                        new_amazon_product = AmazonProduct(
-                            product_link=product['product_link'],
-                            product_name=product['product_name'],
-                            url_id=new_url.id
-                        )
-                        self.db_session.add(new_amazon_product)
-                        logging.info(f"Amazon Product '{product['product_name']}' prepared for addition.")
-
+                    # Add products associated with the new URL
+                    products = data.get("products")
+                    if products:
+                        for product in products:
+                            new_amazon_product = AmazonProduct(
+                                product_link=product['product_link'],
+                                product_name=product['product_name'],
+                                url_id=new_url.id
+                            )
+                            self.db_session.add(new_amazon_product)
+                            logging.info(f"Amazon Product '{product['product_name']}' prepared for addition.")
 
             self.db_session.commit()
-            logging.info("Batch URL addition completed.")
+            logging.info("Batch URL addition and update completed.")
         except Exception as e:
             self.db_session.rollback()
             logging.error(f"An error occurred: {e}. Batch operation rolled back.")
