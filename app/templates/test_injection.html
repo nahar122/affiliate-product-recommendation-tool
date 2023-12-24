@@ -29,20 +29,23 @@
           }
 
           // Make POST request with current URL
-          let response = await fetch("http://localhost/retrieve-url-data", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ url: window.location.href }),
-          });
+          let response = await fetch(
+            "https://rankmargin.com/retrieve-url-data",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ url: window.location.href }),
+            }
+          );
 
           const data = await response.json();
 
           // Check similarity between scraped paragraph and initial_first_paragraph
           if (!isSimilar(firstParagraphText, data.initial_article_paragraph)) {
             // Send data to process-article endpoint
-            response = await fetch("http://localhost/process-article", {
+            response = await fetch("https://rankmargin.com/process-article", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -59,7 +62,7 @@
             if (processData.success) {
               console.log("Article data processed successfully.");
               let new_response = await fetch(
-                "http://localhost/retrieve-url-data",
+                "https://rankmargin.com/retrieve-url-data",
                 {
                   method: "POST",
                   headers: {
