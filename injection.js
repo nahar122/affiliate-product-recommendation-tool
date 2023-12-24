@@ -1,95 +1,97 @@
-async function makeRequests(api_key) {
+async function scrapeWebPage() {
   try {
-    // Make a POST request to 'http://localhost/login'
-    let response = await fetch("http://localhost/login", {
+    // Use document.querySelector to access the first <h1> tag for the title
+    const title = document.querySelector("h1")
+      ? document.querySelector("h1").innerText
+      : "";
+    let firstParagraphElement = null;
+    let firstParagraphText = "";
+
+    // Get all <p> tags
+    const paragraphs = document.querySelectorAll("p");
+
+    // Iterate over all <p> tags to find the first long paragraph
+    for (const p of paragraphs) {
+      if (!firstParagraphElement) {
+        const paragraphText = p.innerText;
+        const wordCount = paragraphText.split(" ").length;
+        if (wordCount > 30) {
+          firstParagraphElement = p;
+          firstParagraphText = paragraphText;
+          break;
+        }
+      }
+    }
+
+    // Make POST request with current URL
+    let response = await fetch("https://rankmargin.com/retrieve-url-data", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ api_key: api_key }),
+      body: JSON.stringify({ url: window.location.href }),
     });
 
-    // Check if the request was successful
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+    const data = await response.json();
 
-    // Extract the JSON body content from the response
-    let data = await response.json();
-    console.log(data);
-    let accessToken = data.access_token;
+    // Check similarity between scraped paragraph and initial_first_paragraph
+    if (!isSimilar(firstParagraphText, data.initial_article_paragraph)) {
+      // Send data to process-article endpoint
+      response = await fetch("https://rankmargin.com/process-article", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: window.location.href,
+          title: title,
+          paragraph: firstParagraphText,
+        }),
+      });
 
-    // Make a GET request to 'http://localhost'
-    response = await fetch("http://localhost", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+      const processData = await response.json();
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+      if (processData.success) {
+        console.log("Article data processed successfully.");
+        let new_response = await fetch(
+          "https://rankmargin.com/retrieve-url-data",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ url: window.location.href }),
+          }
+        );
 
-    // Get HTML response as text
-    const html = await response.text();
-
-    // Find the element with id 'test'
-    const element = document.getElementById("test");
-    if (element) {
-      // Update the innerHTML of the element
-      element.innerHTML = html;
-    } else {
-      console.log('Element with id "test" not found');
-    }
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
-
-const cheerio = require("cheerio");
-const axios = require("axios");
-
-async function scrapeWebPage(url) {
-  try {
-    // Fetch the HTML of the page
-    const { data } = await axios.get(url);
-    const $ = cheerio.load(data);
-
-    // Extract the first <h1> tag for the title
-    const title = $("h1").first().text();
-
-    // Initialize the first paragraph variable
-    let firstParagraph = null;
-
-    // Check all <p> tags
-    $("p").each((i, elem) => {
-      if (firstParagraph === null) {
-        const paragraphText = $(elem).text();
-        const wordCount = paragraphText.split(" ").length;
-        // If word count is more than 30, set as first paragraph and break
-        if (wordCount > 30) {
-          firstParagraph = paragraphText;
-          return false; // Break the loop
+        let new_data = await new_response.json();
+        if (firstParagraphElement && new_data.initial_article_paragraph) {
+          firstParagraphElement.innerHTML = new_data.injected_article_paragraph;
         }
       }
-    });
-
-    // If no suitable <p> tag found, get all text after <h1> until the first <br>
-    if (!firstParagraph) {
-      firstParagraph = $("h1").first().nextUntil("br").text();
+    } else if (firstParagraphElement && data.injected_article_paragraph) {
+      // Replace the first paragraph's HTML
+      firstParagraphElement.innerHTML = data.injected_article_paragraph;
+    } else {
+      console.error(
+        "Failed to retrieve amazon affiliate data for this article."
+      );
     }
 
-    console.log("Title:", title);
-    console.log("First Paragraph:", firstParagraph);
+    console.log("Successfully added amazon affiliate products.");
   } catch (error) {
     console.error("Error scraping the web page:", error);
   }
 }
 
-// Usage
-scrapeWebPage(
-  "https://www.osradar.com/how-to-enable-wifi-in-windows-server-2022/"
-);
+// Placeholder function for similarity check - implement actual logic
+function isSimilar(text1, text2) {
+  // Implement a more robust comparison algorithm
+  return text1.trim().substring(0, 50) === text2.trim().substring(0, 50);
+}
+
+document.addEventListener("DOMContentLoaded", (event) => {
+  scrapeWebPage();
+});
 
 // makeRequests("test_api_key");
