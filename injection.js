@@ -66,12 +66,13 @@ async function scrapeWebPage() {
 
         let new_data = await new_response.json();
         if (firstParagraphElement && new_data.initial_article_paragraph) {
-          firstParagraphElement.innerHTML = new_data.injected_article_paragraph;
+          firstParagraphElement.textContent =
+            new_data.injected_article_paragraph;
         }
       }
     } else if (firstParagraphElement && data.injected_article_paragraph) {
       // Replace the first paragraph's HTML
-      firstParagraphElement.innerHTML = data.injected_article_paragraph;
+      firstParagraphElement.textContent = data.injected_article_paragraph;
     } else {
       console.error(
         "Failed to retrieve amazon affiliate data for this article."
