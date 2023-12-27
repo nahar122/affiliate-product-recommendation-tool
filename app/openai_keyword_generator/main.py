@@ -114,8 +114,15 @@ Your response must include the same number of JSON objects as the input.
     response = await openai_obj.start_chat(MESSAGE, json.dumps(article), True)
     # print(response)
     if response:
-        return (response['content'], response['tokens_used'])
-    
+        counter = 3
+        while True and counter > 0:
+            try:
+                return (json.loads(response['content']), response['tokens_used'])
+            except json.JSONDecodeError:
+                print(response['content'])
+                response = await openai_obj.start_chat(MESSAGE, json.dumps(article), True)
+                counter -= 1
+                
     return None, None
 
 async def generate_paragraph(article_with_affiliate_links):

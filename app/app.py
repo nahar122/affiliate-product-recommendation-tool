@@ -123,7 +123,7 @@ def upload():
                 finished_event.wait()
                 logging.info("Event set, running process_articles")
                 process_articles(unique_id)
-
+            
             Thread(target=wait_and_process).start()
 
             return "<h1>Upload successful</h1>"

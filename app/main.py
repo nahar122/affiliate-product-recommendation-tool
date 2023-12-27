@@ -51,9 +51,8 @@ async def process_article(session, article, db_manager):
         
         return None
     
-    article_with_product_names = json.loads(article_with_product_names)
+    print(article_with_product_names)
 
-    # print(article)
 
     article_with_product_links = {'url': article['url'], "products": []}
     for product_name in article_with_product_names['products']:
