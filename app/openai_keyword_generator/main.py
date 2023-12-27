@@ -27,7 +27,7 @@ Based on the title, paragraph, and products, you will choose the products that a
 
 Then, you will reconstruct the paragraph to include the chosen products in a way that makes sense and is relevant to the article.
 
-Your response must be this adjusted paragraph.
+Your response must be this adjusted paragraph encolsed by a <p> and </p> tags.
 """
 
 OPENAI_MODEL = "gpt-3.5-turbo-1106"
