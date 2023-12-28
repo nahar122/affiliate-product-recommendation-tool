@@ -44,12 +44,26 @@ async def process_article(session, article, db_manager):
     current_dir = pathlib.Path(__file__).parent
     
     if not article_with_product_names:
-        with open(current_dir / "data/failed_articles_.json", 'w') as outfile:
-            failed_articles = json.load(outfile)
-            failed_articles.append(article)
+    # Define the file path
+        file_path = current_dir / "data/failed_articles_.json"
+
+        # Read the current data from the file
+        try:
+            with open(file_path, 'r') as infile:
+                failed_articles = json.load(infile)
+        except FileNotFoundError:
+            # If the file doesn't exist, start with an empty list
+            failed_articles = []
+
+        # Append the new article
+        failed_articles.append(article)
+
+        # Write the updated data back to the file
+        with open(file_path, 'w') as outfile:
             json.dump(failed_articles, outfile)
+
         
-        return None
+        # return None
     
     print(article_with_product_names)
 
