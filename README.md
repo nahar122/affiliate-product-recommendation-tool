@@ -7,3 +7,14 @@
 <p>After we get this list of products, we go through the Amazon Advertisement API to search for real listed amazon products under those keywords given to us by OpenAI per article.</p>
 <p>Once we obtain a list of real amazon products from the Amazon Advertisement API per article, we then send those product names along with their links to OpenAI and retrieve a new HTML paragraph that is relevant to the article and contains the generated amazon affiliate links and store them in a database.</p>
 <p>Place the 'injection.js' script in the header of your website either through jsDelivr or pasting it in a <script></script> tag, and the injection will occur.</p>
+
+<h3>Environment Variables Required</h3>
+<ul>
+    <li>OPENAI_API_KEY=""</li>
+    <li>RAPIDAPI_KEY=""</li>
+    <li>RAPIDAPI_HOST=""</li>
+    <li>DB_PASS=""</li>
+    <li>DB_NAME=""</li>
+    <li>DB_USER=""</li>
+    <li>DB_HOST=""</li>
+</ul>
