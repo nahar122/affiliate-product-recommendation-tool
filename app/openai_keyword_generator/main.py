@@ -21,13 +21,13 @@ You are an intelligent paragraph generator for articles.
 
 In JSON format, you will receive the title and a paragraph of the article as well as an array of several amazon affiliate links in this schema:
 
-{"title": "", "paragraph": "", "products": [{"product_link": "", "product_name": ""}]}
+{"url": "", "article_title": "", "initial_article_paragraph": "", "products": [{"product_link": "", "product_name": ""}]}
 
-Based on the title, paragraph, and products, you will choose the products that are relevant to the article based on their "product_name" key.
+Based on the article_title, initial_article_paragraph, and products, you will choose the products that are relevant to the article based on their "product_name" key.
 
 Then, you will reconstruct the paragraph to include the chosen products in a way that makes sense and is relevant to the article.
 
-Your response must be this adjusted paragraph encolsed by a <p> and </p> tags.
+Your response must be this adjusted paragraph encolsed by a <p> and </p> tags, and all chosen products MUST be linked and enclosed between <a></a> tags, with their href set to the 'url' key.
 """
 
 OPENAI_MODEL = "gpt-3.5-turbo-1106"
@@ -122,7 +122,7 @@ Your response must include the same number of JSON objects as the input.
                 print(response['content'])
                 response = await openai_obj.start_chat(MESSAGE, json.dumps(article), True)
                 counter -= 1
-                
+
     return None, None
 
 async def generate_paragraph(article_with_affiliate_links):
