@@ -25,38 +25,39 @@ async function scrapeWebPage() {
     });
 
     let data = await response.json();
-    if (!isSimilar(firstParagraphText, data.initial_article_paragraph)) {
-      response = await fetch("https://rankmargin.com/process-article", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          url: window.location.href,
-          title: title,
-          paragraph: firstParagraphText,
-        }),
-      });
+    // if (!isSimilar(firstParagraphText, data.initial_article_paragraph)) {
+    //   response = await fetch("https://rankmargin.com/process-article", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({
+    //       url: window.location.href,
+    //       title: title,
+    //       paragraph: firstParagraphText,
+    //     }),
+    //   });
 
-      let processData = await response.json();
-      if (processData.success) {
-        let new_response = await fetch(
-          "https://rankmargin.com/retrieve-url-data",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: window.location.href }),
-          }
-        );
+    //   let processData = await response.json();
+    //   if (processData.success) {
+    //     let new_response = await fetch(
+    //       "https://rankmargin.com/retrieve-url-data",
+    //       {
+    //         method: "POST",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify({ url: window.location.href }),
+    //       }
+    //     );
 
-        let new_data = await new_response.json();
-        if (firstParagraphElement && new_data.initial_article_paragraph) {
-          const newParagraph = document.createElement("div");
-          newParagraph.innerHTML = new_data.injected_article_paragraph;
-          const newParagraphElement = newParagraph.firstChild;
+    //     let new_data = await new_response.json();
+    //     if (firstParagraphElement && new_data.initial_article_paragraph) {
+    //       const newParagraph = document.createElement("div");
+    //       newParagraph.innerHTML = new_data.injected_article_paragraph;
+    //       const newParagraphElement = newParagraph.firstChild;
 
-          firstParagraphElement.replaceWith(newParagraphElement);
-        }
-      }
-    } else if (firstParagraphElement && data.injected_article_paragraph) {
+    //       firstParagraphElement.replaceWith(newParagraphElement);
+    //     }
+    //   }
+    // } else
+    if (firstParagraphElement && data.injected_article_paragraph) {
       const newParagraph = document.createElement("div");
       newParagraph.innerHTML = data.injected_article_paragraph;
       const newParagraphElement = newParagraph.firstChild;
