@@ -57,27 +57,43 @@ function isSimilar(text1, text2) {
 function insertLineBreakAfterThreeSentences(htmlString) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlString, "text/html");
-  let sentenceCount = 0;
+  const walker = document.createTreeWalker(
+    doc.body,
+    NodeFilter.SHOW_TEXT,
+    null,
+    false
+  );
 
-  function addBreaks(node) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      let sentences = node.textContent.split(/([.!?]\s+)/g);
-      for (let i = 0; i < sentences.length; i++) {
-        if (sentences[i].match(/[.!?]/)) {
-          sentenceCount++;
-          if (sentenceCount === 3) {
-            sentences[i] += "<br>";
-            sentenceCount = 0; // reset for next set of sentences
-          }
+  let sentenceCount = 0;
+  let sentences = "";
+  let currentText = "";
+
+  while (walker.nextNode()) {
+    currentText = walker.currentNode.textContent;
+    let parts = currentText.split(/([.!?]\s+)/g);
+
+    for (let part of parts) {
+      if (part.match(/[.!?]/)) {
+        sentenceCount++;
+        sentences += part;
+        if (sentenceCount >= 3) {
+          let tempDiv = document.createElement("div");
+          tempDiv.innerHTML = sentences;
+          walker.currentNode.parentNode.insertBefore(
+            tempDiv.firstChild,
+            walker.currentNode
+          );
+          sentences = "";
+          sentenceCount = 0;
         }
+      } else {
+        sentences += part;
       }
-      node.textContent = sentences.join("");
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      Array.from(node.childNodes).forEach(addBreaks);
     }
+    walker.currentNode.textContent = sentences;
+    sentences = "";
   }
 
-  Array.from(doc.body.childNodes).forEach(addBreaks);
   return doc.body.innerHTML;
 }
 
