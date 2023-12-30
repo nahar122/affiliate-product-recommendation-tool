@@ -69,7 +69,7 @@ function insertLineBreakAfterThreeSentences(htmlString) {
       if (/[.!?]/.test(parts[i]) && i < parts.length - 1) {
         sentenceCount++;
         if (sentenceCount >= 3) {
-          newText += "<br>"; // Insert break after the punctuation
+          newText += "<br><br>"; // Insert break after the punctuation
           sentenceCount = 0;
         }
       }
