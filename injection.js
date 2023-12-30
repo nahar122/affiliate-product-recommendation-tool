@@ -54,8 +54,31 @@ function isSimilar(text1, text2) {
   return text1.trim().substring(0, 50) === text2.trim().substring(0, 50);
 }
 
-function insertLineBreakAfterThreeSentences(text) {
-  return text.replace(/((?:[^.!?]+[.!?]){3})/, "$1<br>");
+function insertLineBreakAfterThreeSentences(htmlString) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlString, "text/html");
+  let sentenceCount = 0;
+
+  function addBreaks(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      let sentences = node.textContent.split(/([.!?]\s+)/g);
+      for (let i = 0; i < sentences.length; i++) {
+        if (sentences[i].match(/[.!?]/)) {
+          sentenceCount++;
+          if (sentenceCount === 3) {
+            sentences[i] += "<br>";
+            sentenceCount = 0; // reset for next set of sentences
+          }
+        }
+      }
+      node.textContent = sentences.join("");
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      Array.from(node.childNodes).forEach(addBreaks);
+    }
+  }
+
+  Array.from(doc.body.childNodes).forEach(addBreaks);
+  return doc.body.innerHTML;
 }
 
 document.addEventListener("DOMContentLoaded", (event) => {
