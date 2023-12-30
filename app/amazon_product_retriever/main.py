@@ -51,7 +51,7 @@ async def get_amazon_product_links_by_keyword(keywords: str = ""):
             return None
 
     if len(data) > 0:
-        return {"product_link": f"https://www.amazon.com/dp/{data[0]['asin']}", "product_name": data[0]['asin_name']}
+        return {"product_link": f"https://www.amazon.com/dp/{data[0]['asin']}?&_encoding=UTF8&tag=synth0f-20", "product_name": data[0]['asin_name']}
 
     return None
 

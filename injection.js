@@ -27,10 +27,11 @@ async function scrapeWebPage() {
     let data = await response.json();
     if (firstParagraphElement && data.injected_article_paragraph) {
       const newParagraph = document.createElement("div");
-      newParagraph.innerHTML = data.injected_article_paragraph;
+      newParagraph.innerHTML = insertLineBreakAfterThreeSentences(
+        data.injected_article_paragraph
+      );
       const newParagraphElement = newParagraph.firstChild;
 
-      // Copy the class and style of the original paragraph to the new paragraph
       if (newParagraphElement) {
         newParagraphElement.className = firstParagraphElement.className;
         newParagraphElement.style.cssText = firstParagraphElement.style.cssText;
@@ -51,6 +52,10 @@ async function scrapeWebPage() {
 
 function isSimilar(text1, text2) {
   return text1.trim().substring(0, 50) === text2.trim().substring(0, 50);
+}
+
+function insertLineBreakAfterThreeSentences(text) {
+  return text.replace(/((?:[^.!?]+[.!?]){3})/, "$1<br>");
 }
 
 document.addEventListener("DOMContentLoaded", (event) => {
