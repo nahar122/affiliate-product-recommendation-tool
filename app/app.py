@@ -73,7 +73,7 @@ def retrieve_url_data():
     url_to_find = data.get('url')
 
     # Query the database
-    url_entry = db_manager.db_session.query(URL).filter_by(url=url_to_find).first()
+    url_entry = db_manager.session.query(URL).filter_by(url=url_to_find).first()
 
     if url_entry:
         return jsonify({
