@@ -30,11 +30,28 @@ class AmazonProduct(Base):
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DatabaseManager:
-    def __init__(self, db_uri):
-        self.engine = create_engine(db_uri)
-        self.db_session = scoped_session(sessionmaker(bind=self.engine))
-        Base.metadata.create_all(self.engine)
-        logging.info(f"Database connection established with {db_uri}")
+    _instance = None
+
+    def __new__(cls, db_uri=None):
+        if cls._instance is None:
+            cls._instance = super(DatabaseManager, cls).__new__(cls)
+            # Initialize your database connection here
+            cls._instance.engine = cls.create_engine(db_uri)
+            cls._instance.session = cls.create_session(cls._instance.engine)
+        return cls._instance
+
+    @staticmethod
+    def create_engine(db_uri):
+        if db_uri is None:
+            raise ValueError("Database URI must be provided")
+        # Replace with your database connection details
+        return create_engine(db_uri)
+
+    @staticmethod
+    def create_session(engine):
+        # Assuming you are using SQLAlchemy
+        Session = sessionmaker(bind=engine)
+        return Session()
 
     def add_domain(self, domain_name):
         existing_domain = self.db_session.query(Domain).filter_by(domain=domain_name).first()
