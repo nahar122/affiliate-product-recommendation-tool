@@ -118,7 +118,7 @@ def retrieve_url_data():
 
     # Query the database
     url_entry = db_manager.session.query(URL).filter_by(url=url_to_find).first()
-
+    db_manager.close_session()
     if url_entry:
         return jsonify({
             'url': url_entry.url,
@@ -137,6 +137,7 @@ def get_all_domains():
     db_manager = DatabaseManager(db_uri=db_uri)
     try:
         domains = db_manager.get_all_domains()
+        db_manager.close_session()
         return jsonify([{'id': domain.id, 'domain': domain.domain} for domain in domains])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
