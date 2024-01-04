@@ -10,13 +10,10 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /usr/src/app
 
-COPY . .
-
-
+# Copy only the requirements.txt initially. This is for better use of Docker cache layers.
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
+EXPOSE 5000
 
-EXPOSE 80
-EXPOSE 3306
-
-CMD [ "python", "-m" , "flask", "run", "--host=0.0.0.0", "--port=80"]
+CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000"]

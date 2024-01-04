@@ -54,34 +54,44 @@ class DatabaseManager:
         return Session()
 
     def add_domain(self, domain_name):
-        existing_domain = self.db_session.query(Domain).filter_by(domain=domain_name).first()
-        if existing_domain:
-            logging.info(f"Domain '{domain_name}' already exists in the database.")
-            return existing_domain
-        else:
-            new_domain = Domain(domain=domain_name)
-            self.db_session.add(new_domain)
-            self.db_session.commit()
-            logging.info(f"New domain '{domain_name}' added to the database.")
-            return new_domain
+        try:
+            existing_domain = self.session.query(Domain).filter_by(domain=domain_name).first()
+            if existing_domain:
+                logging.info(f"Domain '{domain_name}' already exists in the database.")
+                return existing_domain
+            else:
+                new_domain = Domain(domain=domain_name)
+                self.session.add(new_domain)
+                self.session.commit()
+                logging.info(f"New domain '{domain_name}' added to the database.")
+                return new_domain
+        except Exception as e:
+            self.session.rollback()
+            logging.error(f"An error occurred while adding domain '{domain_name}': {e}")
+            raise
 
     def add_url(self, url, domain_id, article_title=None, initial_article_paragraph=None, injected_article_paragraph=None):
-        new_url = URL(
-            url=url,
-            domain_id=domain_id,
-            article_title=article_title,
-            initial_article_paragraph=initial_article_paragraph,
-            injected_article_paragraph=injected_article_paragraph
-        )
-        self.db_session.add(new_url)
-        self.db_session.commit()
-        logging.info(f"New URL '{url}' added to the database.")
-        return new_url
+        try:
+            new_url = URL(
+                url=url,
+                domain_id=domain_id,
+                article_title=article_title,
+                initial_article_paragraph=initial_article_paragraph,
+                injected_article_paragraph=injected_article_paragraph
+            )
+            self.session.add(new_url)
+            self.session.commit()
+            logging.info(f"New URL '{url}' added to the database.")
+            return new_url
+        except Exception as e:
+            self.session.rollback()
+            logging.error(f"An error occurred while adding URL '{url}': {e}")
+            raise
 
     def batch_add_url(self, url_data_list):
         try:
             for data in url_data_list:
-                existing_url = self.db_session.query(URL).filter_by(url=data.get('url')).first()
+                existing_url = self.session.query(URL).filter_by(url=data.get('url')).first()
                 if existing_url:
                     logging.info(f"URL '{data.get('url')}' already exists in the database, updating record.")
                     existing_url.initial_article_paragraph = data.get('initial_article_paragraph')
@@ -95,8 +105,8 @@ class DatabaseManager:
                         initial_article_paragraph=data.get('initial_article_paragraph', None),
                         injected_article_paragraph=data.get('injected_article_paragraph', None)
                     )
-                    self.db_session.add(new_url)
-                    self.db_session.flush()  # Flush to assign an ID without committing
+                    self.session.add(new_url)
+                    self.session.flush()  # Flush to assign an ID without committing
                     logging.info(f"URL '{data.get('url')}' added to the database.")
 
                     # Add products associated with the new URL
@@ -108,16 +118,27 @@ class DatabaseManager:
                                 product_name=product['product_name'],
                                 url_id=new_url.id
                             )
-                            self.db_session.add(new_amazon_product)
+                            self.session.add(new_amazon_product)
                             logging.info(f"Amazon Product '{product['product_name']}' prepared for addition.")
 
-            self.db_session.commit()
+            self.session.commit()
             logging.info("Batch URL addition and update completed.")
         except Exception as e:
-            self.db_session.rollback()
+            self.session.rollback()
             logging.error(f"An error occurred: {e}. Batch operation rolled back.")
+            raise
+    
+    def get_all_domains(self):
+        try:
+            return self.session.query(Domain).all()
+        except Exception as e:
+            logging.error(f"An error occurred while retrieving domains: {e}")
             raise
 
     def close_session(self):
-        self.db_session.remove()
-        logging.info("Database session closed.")
+        try:
+            self.session.remove()
+            logging.info("Database session closed.")
+        except Exception as e:
+            logging.error(f"An error occurred while closing the session: {e}")
+            raise

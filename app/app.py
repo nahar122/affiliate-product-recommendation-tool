@@ -45,45 +45,6 @@ def create_app():
 app = create_app()
 
 db_uri = f"mysql+pymysql://{os.environ.get('DB_USER')}:{os.environ.get('DB_PASS')}@{os.environ.get('DB_HOST')}/{os.environ.get('DB_NAME')}"
-db_manager = DatabaseManager(db_uri=db_uri)
-
-@app.route('/process-article', methods=['POST'])
-def process_single_article():
-    unique_id = uuid.uuid4()
-    current_dir = pathlib.Path(__file__).parent
-    article_path = current_dir / f'data/article_{unique_id}.json'
-    data = request.json
-    if 'url' in data and 'title' in data and 'paragraph' in data:
-        try:
-            json.dump([request.json], open(article_path, "w", encoding="utf-8"))
-            process_articles(unique_id)       
-            return jsonify({"success": True})
-        except Exception as e:
-            return jsonify({"success": False, "error": e})
-
-    return jsonify({"success": False, "error": "Missing required data in request body."})
-
-@app.route('/test-injection-route')
-def test_injection():
-    return render_template('test_injection.html')
-
-@app.route('/retrieve-url-data', methods=['POST'])
-def retrieve_url_data():
-    data = request.get_json()
-    url_to_find = data.get('url')
-
-    # Query the database
-    url_entry = db_manager.session.query(URL).filter_by(url=url_to_find).first()
-
-    if url_entry:
-        return jsonify({
-            'url': url_entry.url,
-            'article_title': url_entry.article_title,
-            'initial_article_paragraph': url_entry.initial_article_paragraph,
-            'injected_article_paragraph': url_entry.injected_article_paragraph
-        })
-    else:
-        return jsonify({'message': 'URL not found'}), 404
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -129,6 +90,58 @@ def upload():
             return "<h1>Upload successful</h1>"
 
     return render_template('upload.html')
+
+@app.route('/process-article', methods=['POST'])
+def process_single_article():
+    unique_id = uuid.uuid4()
+    current_dir = pathlib.Path(__file__).parent
+    article_path = current_dir / f'data/article_{unique_id}.json'
+    data = request.json
+    if 'url' in data and 'title' in data and 'paragraph' in data:
+        try:
+            json.dump([request.json], open(article_path, "w", encoding="utf-8"))
+            process_articles(unique_id)       
+            return jsonify({"success": True})
+        except Exception as e:
+            return jsonify({"success": False, "error": e})
+
+    return jsonify({"success": False, "error": "Missing required data in request body."})
+
+
+
+
+@app.route('/retrieve-url-data', methods=['POST'])
+def retrieve_url_data():
+    db_manager = DatabaseManager(db_uri=db_uri)
+    data = request.get_json()
+    url_to_find = data.get('url')
+
+    # Query the database
+    url_entry = db_manager.session.query(URL).filter_by(url=url_to_find).first()
+
+    if url_entry:
+        return jsonify({
+            'url': url_entry.url,
+            'article_title': url_entry.article_title,
+            'initial_article_paragraph': url_entry.initial_article_paragraph,
+            'injected_article_paragraph': url_entry.injected_article_paragraph
+        })
+    else:
+        return jsonify({'message': 'URL not found'}), 404
+
+
+
+#database routes
+@app.route('/api/get-domains', methods=['GET'])
+def get_all_domains():
+    db_manager = DatabaseManager(db_uri=db_uri)
+    try:
+        domains = db_manager.get_all_domains()
+        return jsonify([{'id': domain.id, 'domain': domain.domain} for domain in domains])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
