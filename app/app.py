@@ -1,6 +1,6 @@
 import uuid
 import json
-from flask import Flask, request, render_template, redirect, url_for, session, jsonify
+from flask import Flask, request, render_template, redirect, url_for, session, jsonify, abort
 from flask_cors import CORS, cross_origin
 from dotenv import load_dotenv
 from helpers.funcs import get_urls_from_csv
@@ -59,19 +59,17 @@ def login():
 
     return render_template('login.html')
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/api/upload', methods=['POST'])
 def upload():
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-
     if request.method == 'POST':
-        if 'file' not in request.files:
+        if 'urls' not in request.files:
             return 'No file part', 400
-        file = request.files['file']
+        file = request.files['urls']
         if file.filename == '':
             return 'No selected file', 400
         if file and file.filename.endswith('.csv'):
             article_urls = get_urls_from_csv(file)
+            domain_id = request.form.get("domain_id")
             current_dir = pathlib.Path(__file__).parent
             unique_id = uuid.uuid4()
             output_path = current_dir / f'data/article_{unique_id}.json'  
@@ -83,15 +81,13 @@ def upload():
             def wait_and_process():
                 finished_event.wait()
                 logging.info("Event set, running process_articles")
-                process_articles(unique_id)
+                process_articles(unique_id, domain_id)
             
             Thread(target=wait_and_process).start()
 
-            return "<h1>Upload successful</h1>"
+            return jsonify({'success': True})
 
-    return render_template('upload.html')
-
-@app.route('/process-article', methods=['POST'])
+@app.route('/api/process-article', methods=['POST'])
 def process_single_article():
     unique_id = uuid.uuid4()
     current_dir = pathlib.Path(__file__).parent
@@ -107,28 +103,27 @@ def process_single_article():
 
     return jsonify({"success": False, "error": "Missing required data in request body."})
 
-
-
-
-@app.route('/retrieve-url-data', methods=['POST'])
+@app.route('/api/retrieve-url-data', methods=['POST'])
 def retrieve_url_data():
-    db_manager = DatabaseManager(db_uri=db_uri)
-    data = request.get_json()
-    url_to_find = data.get('url')
+    try:
+        db_manager = DatabaseManager(db_uri=db_uri)
+        data = request.get_json()
+        url_to_find = data.get('url')
 
-    # Query the database
-    url_entry = db_manager.session.query(URL).filter_by(url=url_to_find).first()
-    db_manager.close_session()
-    if url_entry:
-        return jsonify({
-            'url': url_entry.url,
-            'article_title': url_entry.article_title,
-            'initial_article_paragraph': url_entry.initial_article_paragraph,
-            'injected_article_paragraph': url_entry.injected_article_paragraph
-        })
-    else:
-        return jsonify({'message': 'URL not found'}), 404
-
+        # Query the database
+        url_entry = db_manager.session.query(URL).filter_by(url=url_to_find).first()
+        db_manager.close_session()
+        if url_entry:
+            return jsonify({
+                'url': url_entry.url,
+                'article_title': url_entry.article_title,
+                'initial_article_paragraph': url_entry.initial_article_paragraph,
+                'injected_article_paragraph': url_entry.injected_article_paragraph
+            })
+        else:
+            return jsonify({'message': 'URL not found'}), 404
+    except Exception as e:
+        return jsonify({'sucess': False, 'error': str(e)}), 500
 
 
 #database routes
@@ -138,11 +133,82 @@ def get_all_domains():
     try:
         domains = db_manager.get_all_domains()
         db_manager.close_session()
-        return jsonify([{'id': domain.id, 'domain': domain.domain} for domain in domains])
+        return jsonify([{'sucess': True, 'id': domain.id, 'domain': domain.domain} for domain in domains])
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'sucess': False, 'error': str(e)}), 500
+
+@app.route('/api/upload-excluded-urls', methods=['POST'])
+def upload_excluded_urls():
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'No file part'}), 400
+    domain_id = request.form.get('domain_id')
+    if not domain_id:
+        return jsonify({'success': False, 'error': "Key 'domain_id' missing from request."})
+
+    if file and file.filename.endswith('.csv'):
+        try:
+            article_urls = get_urls_from_csv(file)
+            db_manager = DatabaseManager(db_uri=db_uri)
+            db_manager.batch_add_excluded_url(article_urls, domain_id)
+            db_manager.close_session()
+            return jsonify({"success": True})
+        except Exception as e:
+            return jsonify({'sucess': False, 'error': str(e)}), 500
 
 
+@app.route('/api/add-domain', methods=['POST'])
+def add_domain():
+
+    db_manager = DatabaseManager(db_uri=db_uri)
+    data = request.json
+    if 'domain' not in data:
+        return jsonify({"success": False, "error": "Missing 'domain' key from request."})
+    if 'universal_passback_paragraph' not in data:
+        return jsonify({"success": False, "error": "Missing 'universal_passback_paragraph' key from request."})
+    
+    try:
+        new_domain_id = db_manager.add_domain(data['domain'], data['universal_passback_paragraph']).id
+        db_manager.close_session()
+        return jsonify({"success": True, 'domain_id': new_domain_id})
+    except Exception as e:
+        return jsonify({'sucess': False, 'error': str(e)}), 500
+    
+@app.route('/api/get-urls/<int:domain_id>', methods=['GET'])
+def get_urls(domain_id):
+    db_manager = DatabaseManager(db_uri=db_uri)
+    try:
+        urls = db_manager.get_all_urls_by_domain_id(domain_id)
+        db_manager.close_session()
+        if not urls:
+            abort(404, description=f"No URLs found for domain ID {domain_id}")
+
+        return jsonify([{
+            'sucess': True,
+            'id': url.id,
+            'url': url.url,
+            'article_title': url.article_title,
+            'initial_article_paragraph': url.initial_article_paragraph,
+            'injected_article_paragraph': url.injected_article_paragraph,
+            'domain_id': url.domain_id
+        } for url in urls])
+    
+    except Exception as e:
+        return jsonify({'sucess': False, 'error': str(e)}), 500
+
+@app.route('/api/edit-url/<int:url_id>', methods=['PATCH'])
+def edit_url(url_id):
+    db_manager = DatabaseManager(db_uri)
+    data = request.json
+    print(data)
+    try:
+        db_manager.update_url(url_id, data)
+        db_manager.close_session()
+        return {'success': True}
+    except Exception as e:
+        return jsonify({'sucess': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)

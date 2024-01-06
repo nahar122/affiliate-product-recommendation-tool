@@ -9,6 +9,7 @@ class Domain(Base):
     __tablename__ = 'domains'
     id = Column(Integer, primary_key=True)
     domain = Column(String(255), unique=True, nullable=False)
+    universal_passback_paragraph = Column(Text, nullable=False)
 
 class URL(Base):
     __tablename__ = 'urls'
@@ -26,6 +27,14 @@ class AmazonProduct(Base):
     product_name = Column(String(500), nullable=False)
     url_id = Column(Integer, ForeignKey('urls.id'), nullable=False)
 
+class ExcludedUrl(Base):
+    __tablename__ = 'excluded_urls'
+    id = Column(Integer, primary_key=True)
+    url = Column(String(255), nullable=False, unique=True)
+    domain_id = Column(Integer, ForeignKey('domains.id'), nullable=False)
+
+
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -35,8 +44,21 @@ class DatabaseManager:
     def __new__(cls, db_uri=None):
         if cls._instance is None:
             cls._instance = super(DatabaseManager, cls).__new__(cls)
-            # Initialize your database connection here
-            cls._instance.engine = cls.create_engine(db_uri)
+            if db_uri is None:
+                raise ValueError("Database URI must be provided")
+
+            # Initialize the database engine
+            cls._instance.engine = create_engine(db_uri)
+
+            # Create all tables if they don't exist
+            try:
+                Base.metadata.create_all(cls._instance.engine)
+                logging.info("All tables created or verified successfully.")
+            except Exception as e:
+                logging.error(f"An error occurred while creating tables: {e}")
+                raise
+
+            # Initialize the session
             cls._instance.session = cls.create_session(cls._instance.engine)
         return cls._instance
 
@@ -53,14 +75,14 @@ class DatabaseManager:
         Session = sessionmaker(bind=engine)
         return Session()
 
-    def add_domain(self, domain_name):
+    def add_domain(self, domain_name, universal_passback_paragraph):
         try:
             existing_domain = self.session.query(Domain).filter_by(domain=domain_name).first()
             if existing_domain:
                 logging.info(f"Domain '{domain_name}' already exists in the database.")
                 return existing_domain
             else:
-                new_domain = Domain(domain=domain_name)
+                new_domain = Domain(domain=domain_name, universal_passback_paragraph=universal_passback_paragraph)
                 self.session.add(new_domain)
                 self.session.commit()
                 logging.info(f"New domain '{domain_name}' added to the database.")
@@ -68,6 +90,33 @@ class DatabaseManager:
         except Exception as e:
             self.session.rollback()
             logging.error(f"An error occurred while adding domain '{domain_name}': {e}")
+            raise
+    def batch_add_excluded_url(self, excluded_url_list, domain_id):
+        try:
+            domain = self.session.query(Domain).filter_by(id=domain_id).first()
+            if not domain:
+                raise Exception(f"Domain with ID '{domain_id}' not found.")
+            for url in excluded_url_list:
+                excluded_url = ExcludedUrl(url=url, domain_id=domain.id)
+                self.session.add(excluded_url)
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            logging.error(f"An error occurred while during batch add excluded URLs: {e}")
+            raise
+
+
+    def add_excluded_url(self, url, domain_id):
+        try:
+            domain = self.session.query(Domain).filter_by(id=domain_id).first()
+            if not domain:
+                raise Exception(f"Domain with ID '{domain_id}' not found.")
+            excluded_url = ExcludedUrl(url=url, domain_id=domain.id)
+            self.session.add(excluded_url)
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            logging.error(f"An error occurred while adding an excluded URL: {e}")
             raise
 
     def add_url(self, url, domain_id, article_title=None, initial_article_paragraph=None, injected_article_paragraph=None):
@@ -87,6 +136,26 @@ class DatabaseManager:
             self.session.rollback()
             logging.error(f"An error occurred while adding URL '{url}': {e}")
             raise
+    
+    def update_url(self, url_id, options):
+        try:
+            url = self.session.query(URL).filter_by(id=url_id).first()
+            if not url:
+                raise Exception(f"URL with ID '{url_id}' does not exist.")
+            if options.get('article_title'):
+                url.article_title = options.get('article_title')
+            if options.get('initial_article_paragraph'):
+                url.initial_article_paragraph = options.get('initial_article_paragraph')
+            if options.get('injected_article_paragraph'):
+                url.injected_article_paragraph = options.get('injected_article_paragraph')
+            self.session.commit()
+            logging.info(f"Finished updating URL with ID: {url_id}.")
+
+        except Exception as e:
+            self.session.rollback()
+            logging.error(f"An error occurred: {e}. Rolling back.")
+            raise
+    
 
     def batch_add_url(self, url_data_list):
         try:
@@ -132,12 +201,21 @@ class DatabaseManager:
         try:
             return self.session.query(Domain).all()
         except Exception as e:
+            self.session.rollback()
             logging.error(f"An error occurred while retrieving domains: {e}")
+            raise
+    
+    def get_all_urls_by_domain_id(self, domain_id):
+        try:
+            return self.session.query(URL).filter_by(domain_id=domain_id).all()
+        except Exception as e:
+            self.session.rollback()
+            logging.error(f"An error occurred while retrieving URLs for domain_id={domain_id}: {e}")
             raise
 
     def close_session(self):
         try:
-            self.session.remove()
+            self.session.close()
             logging.info("Database session closed.")
         except Exception as e:
             logging.error(f"An error occurred while closing the session: {e}")

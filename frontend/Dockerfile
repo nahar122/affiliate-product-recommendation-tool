@@ -1,5 +1,5 @@
 # Use an official Node runtime as a parent image
-FROM node:14
+FROM node:latest
 
 # Set the working directory in the container
 WORKDIR /usr/src/frontend
@@ -8,7 +8,7 @@ WORKDIR /usr/src/frontend
 COPY package*.json ./
 
 # Install any needed packages
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Define environment variable
 ENV PORT 3000

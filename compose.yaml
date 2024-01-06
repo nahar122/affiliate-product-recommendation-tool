@@ -17,10 +17,8 @@ services:
     container_name: flask-app
     build: app
     restart: always
-    volumes: # Add this line
-      - ./app:/usr/src/app # Mount the app directory
-    ports:
-      - "5000:5000"
+    volumes:
+      - ./app:/usr/src/app
     networks:
       - backend
     depends_on:
@@ -31,14 +29,25 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    volumes: # Add this line
-      - ./frontend:/usr/src/frontend # Mount the frontend directory
+    volumes:
+      - ./frontend:/usr/src/frontend
     networks:
       - backend
     depends_on:
       - flask-app
+
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80" # Map to 443 instead if using SSL
+    depends_on:
+      - flask-app
+      - react-frontend
+    networks:
+      - backend
 
 networks:
   backend:

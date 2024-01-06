@@ -33,7 +33,7 @@ TOKEN_RESET_INTERVAL = 60  # Time in seconds for token reset
 #             print(f"Error fetching new domains: {response.json()}")
 #             return []
 
-async def process_article(session, article, db_manager):
+async def process_article(session, article, db_manager, domain_id):
     # Here, add your logic to process each URL through your APIs
     # For example:
     # 1. Send URL to OpenAI and get data
@@ -81,12 +81,12 @@ async def process_article(session, article, db_manager):
     injected_paragraph_html, tokens_used_2 = await generate_paragraph(article_with_product_links)
     
     article_with_product_links['injected_article_paragraph'] = injected_paragraph_html
-    domain = db_manager.add_domain(extract_domain(article_with_product_links['url']))
-    article_with_product_links['domain_id'] = domain.id
+    # domain = db_manager.add_domain(extract_domain(article_with_product_links['url']))
+    article_with_product_links['domain_id'] = domain_id
     return article_with_product_links, tokens_used + tokens_used_2
     
 
-async def main(filepath):
+async def main(filepath, domain_id):
     with open(str(filepath), encoding='utf-8') as infile:
         articles = json.load(infile)
         batch_data = []
@@ -97,7 +97,7 @@ async def main(filepath):
         db_manager = DatabaseManager(db_uri=db_uri)
 
         async with aiohttp.ClientSession() as session:
-            tasks = [process_article(session, article, db_manager) for article in articles]
+            tasks = [process_article(session, article, db_manager, domain_id) for article in articles]
 
             while tasks:
                 if datetime.now() - last_token_reset >= timedelta(seconds=TOKEN_RESET_INTERVAL):
@@ -133,13 +133,13 @@ async def main(filepath):
                         await asyncio.sleep(retry_after)
 
 
-def process_articles(unique_id):
+def process_articles(unique_id, domain_id):
     start_time = datetime.now()
     logging.info("Script started")
     root_dir = pathlib.Path(__file__).parent
     
     crawled_articles_path = root_dir / f'data/article_{unique_id}.json'  # Replace with your CSV file path
-    asyncio.run(main(crawled_articles_path))
+    asyncio.run(main(crawled_articles_path, domain_id))
     end_time = datetime.now()
     elapsed_time = end_time - start_time
     logging.info(f"Script ended. Total elapsed time: {elapsed_time}")

@@ -18,7 +18,7 @@ async function scrapeWebPage() {
       }
     }
 
-    let response = await fetch("https://rankmargin.com/retrieve-url-data", {
+    let response = await fetch("https://rankmargin.com/api/retrieve-url-data", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url: window.location.href }),
