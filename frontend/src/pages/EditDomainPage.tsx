@@ -16,12 +16,14 @@ const EditDomainPage = () => {
   const [currentURL, setCurrentURL] = useState<URL | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [updatedText, setUpdatedText] = useState<string>("");
+  console.log(process.env.REACT_APP_API_URL);
   const updateInjectedParagraph = async () => {
     if (!currentURL) {
       console.error("An error has occured. URL not found.");
       return false;
     }
     try {
+      console.log(process.env.REACT_APP_API_URL);
       const response = await axios.patch(`/edit-url/${currentURL.id}`, {
         injected_article_paragraph: updatedText,
       });
