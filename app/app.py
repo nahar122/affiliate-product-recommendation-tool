@@ -11,8 +11,9 @@ import pathlib
 import os
 from threading import Thread, Event
 import logging
-from db.models import DatabaseManager, URL
+from db.models import DatabaseManager, URL, Domain
 import crochet
+from helpers.funcs import extract_domain
 crochet.setup()
 load_dotenv()
 
@@ -112,16 +113,36 @@ def retrieve_url_data():
 
         # Query the database
         url_entry = db_manager.session.query(URL).filter_by(url=url_to_find).first()
+        url_is_excluded = db_manager.is_url_excluded(url_to_find)
         db_manager.close_session()
         if url_entry:
             return jsonify({
                 'url': url_entry.url,
                 'article_title': url_entry.article_title,
                 'initial_article_paragraph': url_entry.initial_article_paragraph,
-                'injected_article_paragraph': url_entry.injected_article_paragraph
-            })
+                'injected_article_paragraph': url_entry.injected_article_paragraph,
+                'excluded': False
+            }), 200
+        elif url_is_excluded:
+            return jsonify({
+                'url': url_entry.url,
+                'article_title': url_entry.article_title,
+                'initial_article_paragraph': url_entry.initial_article_paragraph,
+                'injected_article_paragraph': url_entry.initial_article_paragraph,
+                'excluded': True
+            }), 200
         else:
-            return jsonify({'message': 'URL not found'}), 404
+            extracted_domain = extract_domain(url_to_find)
+            domain = db_manager.session.query(Domain).filter_by(domain=extracted_domain).first()
+            if domain:
+                return jsonify({
+                    'url': None,
+                    'article_title': None,
+                    'initial_article_paragraph': None,
+                    'injected_article_paragraph': domain.universal_passback_paragraph,
+                    'excluded': False
+                }), 200
+            return jsonify({'message': 'URL and/or domain not found'}), 404
     except Exception as e:
         return jsonify({'sucess': False, 'error': str(e)}), 500
 

@@ -212,6 +212,21 @@ class DatabaseManager:
             self.session.rollback()
             logging.error(f"An error occurred while retrieving URLs for domain_id={domain_id}: {e}")
             raise
+    
+    def is_url_excluded(self, url):
+        try:
+            # Query the ExcludedUrl table to check if the URL exists
+            excluded_url = self.session.query(ExcludedUrl).filter_by(url=url).first()
+            if excluded_url:
+                logging.info(f"The URL '{url}' is excluded.")
+                return True
+            else:
+                logging.info(f"The URL '{url}' is not excluded.")
+                return False
+        except Exception as e:
+            self.session.rollback()
+            logging.error(f"An error occurred while checking if the URL '{url}' is excluded: {e}")
+            raise
 
     def close_session(self):
         try:

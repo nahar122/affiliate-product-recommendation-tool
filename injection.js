@@ -25,6 +25,12 @@ async function scrapeWebPage() {
     });
 
     let data = await response.json();
+
+    if (data.excluded) {
+      console.log("Article is excluded.");
+      return;
+    }
+
     if (firstParagraphElement && data.injected_article_paragraph) {
       const newParagraph = document.createElement("div");
       newParagraph.innerHTML = insertLineBreakAfterThreeSentences(
