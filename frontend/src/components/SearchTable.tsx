@@ -33,12 +33,10 @@ const SearchInput = <T extends Record<string, any>>({
             .toLowerCase()
             .includes(newValue.toLowerCase());
         }
-        return "";
       });
-
-      setFilteredData(newFilteredData);
-      onFilter(newFilteredData); // Pass filtered data to parent
     }
+    setFilteredData(newFilteredData);
+    onFilter(newFilteredData); // Pass filtered data to parent
   };
 
   return (
