@@ -113,7 +113,7 @@ def retrieve_url_data():
 
         # Query the database
         url_entry = db_manager.session.query(URL).filter_by(url=url_to_find).first()
-        excluded_url = db_manager.get_excluded_url(url_to_find)
+        excluded_url = db_manager.is_url_excluded(url_to_find)
         db_manager.close_session()
         if url_entry:
             return jsonify({
