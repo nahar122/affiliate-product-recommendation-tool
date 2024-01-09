@@ -23,7 +23,11 @@ const SearchInput = <T extends Record<string, any>>({
 
     if (newValue) {
       newFilteredData = dataList.filter((item) => {
-        if (item[searchKey]) {
+        if (
+          item !== null &&
+          item[searchKey] !== null &&
+          item[searchKey] !== undefined
+        ) {
           return item[searchKey]
             .toString()
             .toLowerCase()
