@@ -48,11 +48,16 @@ const SearchInput = <T extends Record<string, any>>({
           tabIndex={0}
           className="dropdown-content z-[3] menu p-3 shadow-md bg-base-100 rounded-box"
         >
-          {filteredData.slice(0, 5).map((item, index) => (
-            <li key={index}>
-              <a>{item[searchKey]?.toString()}</a>
-            </li>
-          ))}
+          {filteredData.slice(0, 5).map((item, index) => {
+            if (item[searchKey] === undefined || item[searchKey] === null) {
+              return;
+            }
+            return (
+              <li key={index}>
+                <a>{item[searchKey]?.toString()}</a>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
