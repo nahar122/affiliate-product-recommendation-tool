@@ -22,16 +22,19 @@ const SearchInput = <T extends Record<string, any>>({
     let newFilteredData = dataList;
 
     if (newValue) {
-      newFilteredData = dataList.filter((item) =>
-        item[searchKey]
-          .toString()
-          .toLowerCase()
-          .includes(newValue.toLowerCase())
-      );
-    }
+      newFilteredData = dataList.filter((item) => {
+        if (item[searchKey]) {
+          return item[searchKey]
+            .toString()
+            .toLowerCase()
+            .includes(newValue.toLowerCase());
+        }
+        return "";
+      });
 
-    setFilteredData(newFilteredData);
-    onFilter(newFilteredData); // Pass filtered data to parent
+      setFilteredData(newFilteredData);
+      onFilter(newFilteredData); // Pass filtered data to parent
+    }
   };
 
   return (
