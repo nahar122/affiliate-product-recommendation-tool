@@ -4,8 +4,8 @@ import axios from "../axios";
 const AddDomainPage = () => {
   const [domainName, setDomainName] = useState<string>("");
   const [paragraphText, setParagraphText] = useState<string>("");
+  const [excludedUrlText, setExcludedUrlText] = useState<string>("");
   const fileInputRef1 = useRef<HTMLInputElement>(null);
-  const fileInputRef2 = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -14,12 +14,7 @@ const AddDomainPage = () => {
     // Append domain name and paragraph text
     formData.append("domainName", domainName);
     formData.append("paragraphText", paragraphText);
-
-    // Assuming fileInputRef2 is the file to upload
-    if (fileInputRef2.current?.files && fileInputRef2.current.files[0]) {
-      formData.append("file", fileInputRef2.current.files[0]); // Use 'file' as the key
-    }
-
+    let excludedUrlList = excludedUrlText.split("\n");
     if (fileInputRef1.current?.files && fileInputRef1.current.files[0]) {
       formData.append("urls", fileInputRef1.current.files[0]); // Use 'file' as the key
     }
@@ -32,7 +27,7 @@ const AddDomainPage = () => {
       console.error(create_domain_response.data.error);
       return;
     }
-    let domain_id = create_domain_response.data.domain_id;
+    const domain_id = create_domain_response.data.domain_id;
     console.log(domain_id);
 
     // Append domain_id to formData for the file upload
@@ -40,15 +35,10 @@ const AddDomainPage = () => {
 
     // Upload the file
     try {
-      let upload_excluded_urls = await axios.post(
-        "/upload-excluded-urls",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data", // This might be optional as axios sets it automatically
-          },
-        }
-      );
+      let upload_excluded_urls = await axios.post("/add-excluded-urls", {
+        domainId: domain_id,
+        excludedUrls: excludedUrlList,
+      });
 
       if (!upload_excluded_urls.data.success) {
         console.error(upload_excluded_urls.data.error);
@@ -111,15 +101,17 @@ const AddDomainPage = () => {
           }}
         ></textarea>
       </label>
-      <h3 className="text-xl font-semibold my-2">
-        Upload CSV of URLs to Exclude
-      </h3>
-      <input
-        type="file"
-        accept=".csv"
-        ref={fileInputRef2}
-        className="file-input file-input-bordered my-2 w-3/6 mx-auto"
-      />
+      <label className="flex flex-col text-xl font-semibold my-4">
+        Excluded URLs (newline-separated)
+        <textarea
+          className="textarea textarea-info w-3/6 my-2 text-black h-48 mx-auto"
+          value={excludedUrlText}
+          placeholder="Enter newline-separated URL list here"
+          onChange={(e) => {
+            setExcludedUrlText(e.target.value);
+          }}
+        ></textarea>
+      </label>
       <button
         type="submit"
         className="btn btn-active btn-neutral my-4 w-3/6 mx-auto"

@@ -4,12 +4,22 @@ import { URL } from "../types/URL";
 interface UrlTableProps {
   data: URL[];
   setUrl: Dispatch<SetStateAction<URL | null>>;
+  currentPage: number;
+  setCurrentPageNumber: (pageNumber: number) => void;
 }
 
-const UrlTable: React.FC<UrlTableProps> = ({ data, setUrl }) => {
+const UrlTable: React.FC<UrlTableProps> = ({
+  data,
+  setUrl,
+  currentPage,
+  setCurrentPageNumber,
+}) => {
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(0);
   const rowLimit = 5;
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPageNumber(pageNumber);
+  };
   return (
     <div className="overflow-auto">
       <table className="table table-xs table-pin-rows table-pin-cols">
@@ -52,24 +62,24 @@ const UrlTable: React.FC<UrlTableProps> = ({ data, setUrl }) => {
       </table>
       <div className="join my-4">
         <button
-          onClick={() => setCurrentPage(0)}
+          onClick={() => handlePageChange(0)}
           className={`join-item btn ${currentPage === 0 ? "btn-disabled" : ""}`}
         >
           ««
         </button>
         <button
-          onClick={() => setCurrentPage(currentPage - 1)}
+          onClick={() => handlePageChange(currentPage - 1)}
           className={`join-item btn ${currentPage === 0 ? "btn-disabled" : ""}`}
         >
           «
         </button>
-        <button className="join-item btn">{`${currentPage + 1} / ${Math.floor(
-          data.length / rowLimit
-        )}`}</button>
+        <button className="join-item btn">{`${currentPage + 1} / ${
+          Math.floor(data.length / rowLimit) + 1
+        }`}</button>
         <button
-          onClick={() => setCurrentPage(currentPage + 1)}
+          onClick={() => handlePageChange(currentPage + 1)}
           className={`join-item btn ${
-            currentPage === Math.floor(data.length / rowLimit) - 1
+            currentPage === Math.floor(data.length / rowLimit)
               ? "btn-disabled"
               : ""
           }`}
@@ -77,9 +87,11 @@ const UrlTable: React.FC<UrlTableProps> = ({ data, setUrl }) => {
           »
         </button>
         <button
-          onClick={() => setCurrentPage(Math.floor(data.length / rowLimit) - 1)}
+          onClick={() =>
+            handlePageChange(Math.floor(data.length / rowLimit) - 1)
+          }
           className={`join-item btn ${
-            currentPage === Math.floor(data.length / rowLimit) - 1
+            currentPage === Math.floor(data.length / rowLimit)
               ? "btn-disabled"
               : ""
           }`}

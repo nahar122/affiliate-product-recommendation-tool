@@ -4,12 +4,23 @@ import { Domain } from "../types/Domain";
 interface DomainTableProps {
   data: Domain[];
   setDomain: Dispatch<SetStateAction<Domain | null>>;
+  currentPage: number;
+  setCurrentPageNumber: (pageNumber: number) => void;
 }
 
-const DomainTable: React.FC<DomainTableProps> = ({ data, setDomain }) => {
+const DomainTable: React.FC<DomainTableProps> = ({
+  data,
+  setDomain,
+  currentPage,
+  setCurrentPageNumber,
+}) => {
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(0);
+  // const [currentPage, setCurrentPage] = useState<number>(0);
+
   const rowLimit = 5;
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPageNumber(pageNumber);
+  };
   return (
     <div className="overflow-auto w-full">
       <table className="table-lg w-full">
@@ -18,6 +29,7 @@ const DomainTable: React.FC<DomainTableProps> = ({ data, setDomain }) => {
           <tr>
             <th>ID</th>
             <th>Domain</th>
+            <th>Universal Passback Paragraph</th>
           </tr>
         </thead>
         <tbody>
@@ -36,20 +48,29 @@ const DomainTable: React.FC<DomainTableProps> = ({ data, setDomain }) => {
               >
                 <td>{`${domain.id}`}</td>
                 <td>{domain.domain}</td>
+                <td>{domain.universal_passback_paragraph}</td>
               </tr>
             ))}
         </tbody>
       </table>
       <div className="join my-4">
         <button
-          onClick={() => setCurrentPage(currentPage - 1)}
+          onClick={() => handlePageChange(0)}
+          className={`join-item btn ${currentPage === 0 ? "btn-disabled" : ""}`}
+        >
+          ««
+        </button>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
           className={`join-item btn ${currentPage === 0 ? "btn-disabled" : ""}`}
         >
           «
         </button>
-        <button className="join-item btn">{currentPage + 1}</button>
+        <button className="join-item btn">{`${currentPage + 1} / ${
+          Math.floor(data.length / rowLimit) + 1
+        }`}</button>
         <button
-          onClick={() => setCurrentPage(currentPage + 1)}
+          onClick={() => handlePageChange(currentPage + 1)}
           className={`join-item btn ${
             currentPage === Math.floor(data.length / rowLimit)
               ? "btn-disabled"
@@ -57,6 +78,18 @@ const DomainTable: React.FC<DomainTableProps> = ({ data, setDomain }) => {
           }`}
         >
           »
+        </button>
+        <button
+          onClick={() =>
+            handlePageChange(Math.floor(data.length / rowLimit) - 1)
+          }
+          className={`join-item btn ${
+            currentPage === Math.floor(data.length / rowLimit)
+              ? "btn-disabled"
+              : ""
+          }`}
+        >
+          »»
         </button>
       </div>
     </div>

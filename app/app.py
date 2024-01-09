@@ -94,10 +94,10 @@ def process_single_article():
     current_dir = pathlib.Path(__file__).parent
     article_path = current_dir / f'data/article_{unique_id}.json'
     data = request.json
-    if 'url' in data and 'title' in data and 'paragraph' in data:
+    if 'url' in data and 'title' in data and 'paragraph' in data and "domain_id" in data:
         try:
             json.dump([request.json], open(article_path, "w", encoding="utf-8"))
-            process_articles(unique_id)       
+            process_articles(unique_id, data.get("domain_id"))       
             return jsonify({"success": True})
         except Exception as e:
             return jsonify({"success": False, "error": e})
@@ -113,7 +113,7 @@ def retrieve_url_data():
 
         # Query the database
         url_entry = db_manager.session.query(URL).filter_by(url=url_to_find).first()
-        url_is_excluded = db_manager.is_url_excluded(url_to_find)
+        excluded_url = db_manager.get_excluded_url(url_to_find)
         db_manager.close_session()
         if url_entry:
             return jsonify({
@@ -123,12 +123,9 @@ def retrieve_url_data():
                 'injected_article_paragraph': url_entry.injected_article_paragraph,
                 'excluded': False
             }), 200
-        elif url_is_excluded:
+        elif excluded_url:
             return jsonify({
-                'url': url_entry.url,
-                'article_title': url_entry.article_title,
-                'initial_article_paragraph': url_entry.initial_article_paragraph,
-                'injected_article_paragraph': url_entry.initial_article_paragraph,
+                'url': excluded_url.url,
                 'excluded': True
             }), 200
         else:
@@ -154,30 +151,30 @@ def get_all_domains():
     try:
         domains = db_manager.get_all_domains()
         db_manager.close_session()
-        return jsonify([{'sucess': True, 'id': domain.id, 'domain': domain.domain} for domain in domains])
+        return jsonify([{'sucess': True, 'id': domain.id, 'domain': domain.domain, "universal_passback_paragraph": domain.universal_passback_paragraph} for domain in domains])
     except Exception as e:
         return jsonify({'sucess': False, 'error': str(e)}), 500
 
-@app.route('/api/upload-excluded-urls', methods=['POST'])
+@app.route('/api/add-excluded-urls', methods=['POST'])
 def upload_excluded_urls():
-    if 'file' not in request.files:
-        return jsonify({'success': False, 'error': 'No file part'}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'success': False, 'error': 'No file part'}), 400
-    domain_id = request.form.get('domain_id')
+    data = request.json
+    print(data)
+    excluded_urls = data.get("excludedUrls")
+    domain_id = data.get("domainId")
+    print(f"excluded_urls: {excluded_urls}")
+
     if not domain_id:
         return jsonify({'success': False, 'error': "Key 'domain_id' missing from request."})
+    if not excluded_urls:
+        return jsonify({'success': False, 'error': "Key 'excludedUrls' missing from request."})
 
-    if file and file.filename.endswith('.csv'):
-        try:
-            article_urls = get_urls_from_csv(file)
-            db_manager = DatabaseManager(db_uri=db_uri)
-            db_manager.batch_add_excluded_url(article_urls, domain_id)
-            db_manager.close_session()
-            return jsonify({"success": True})
-        except Exception as e:
-            return jsonify({'sucess': False, 'error': str(e)}), 500
+    try:
+        db_manager = DatabaseManager(db_uri=db_uri)
+        db_manager.batch_add_excluded_url(excluded_urls, domain_id)
+        db_manager.close_session()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({'sucess': False, 'error': str(e)}), 500
 
 
 @app.route('/api/add-domain', methods=['POST'])
@@ -226,6 +223,18 @@ def edit_url(url_id):
     print(data)
     try:
         db_manager.update_url(url_id, data)
+        db_manager.close_session()
+        return {'success': True}
+    except Exception as e:
+        return jsonify({'sucess': False, 'error': str(e)}), 500
+
+@app.route('/api/edit-domain/<int:domain_id>', methods=['PATCH'])
+def edit_domain(domain_id):
+    db_manager = DatabaseManager(db_uri)
+    data = request.json
+    print(data)
+    try:
+        db_manager.update_domain(domain_id, data)
         db_manager.close_session()
         return {'success': True}
     except Exception as e:

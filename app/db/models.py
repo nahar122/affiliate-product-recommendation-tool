@@ -156,6 +156,21 @@ class DatabaseManager:
             logging.error(f"An error occurred: {e}. Rolling back.")
             raise
     
+    def update_domain(self, domain_id, options):
+        try:
+            domain = self.session.query(Domain).filter_by(id=domain_id).first()
+            if not domain:
+                raise Exception(f"Domain with ID '{domain_id}' does not exist.")
+            if options.get('universal_passback_paragraph'):
+                domain.universal_passback_paragraph = options.get('universal_passback_paragraph')
+            self.session.commit()
+            logging.info(f"Finished updating URL with ID: {domain_id}.")
+
+        except Exception as e:
+            self.session.rollback()
+            logging.error(f"An error occurred: {e}. Rolling back.")
+            raise
+    
 
     def batch_add_url(self, url_data_list):
         try:
@@ -219,10 +234,10 @@ class DatabaseManager:
             excluded_url = self.session.query(ExcludedUrl).filter_by(url=url).first()
             if excluded_url:
                 logging.info(f"The URL '{url}' is excluded.")
-                return True
+                return excluded_url
             else:
                 logging.info(f"The URL '{url}' is not excluded.")
-                return False
+                return None
         except Exception as e:
             self.session.rollback()
             logging.error(f"An error occurred while checking if the URL '{url}' is excluded: {e}")
