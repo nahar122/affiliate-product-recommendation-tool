@@ -1,26 +1,28 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import "./App.css";
+import { Route, Routes } from "react-router-dom";
+import IndexPage from "./routes";
 import Navbar from "./components/Navbar";
-import AddDomainPage from "./pages/AddDomainPage";
-import EditDomainPage from "./pages/EditDomainPage";
-import HomePage from "./pages/HomePage";
+import SignIn from "./routes/sign-in";
+import AddDomainPage from "./routes/add-domain";
+import EditDomainPage from "./routes/edit-domain";
+import AuthenticatedRoutes from "./components/AuthenticatedRoutes";
 
 function App() {
   return (
-    <Router>
-      <div className="App">
+    <div>
+      <header>
         <Navbar />
-        <main className="w-3/4 mx-auto max-w">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/edit-domain" element={<EditDomainPage />} />
-            <Route path="/add-domain" element={<AddDomainPage />} />
-            {/* Add additional routes as needed */}
-          </Routes>
-        </main>
-      </div>
-    </Router>
+      </header>
+      <main className="w-3/4 mx-auto">
+        <Routes>
+          <Route index element={<IndexPage />} />
+          <Route path="login" element={<SignIn />} />
+          <Route element={<AuthenticatedRoutes />}>
+            <Route path="add-domain" element={<AddDomainPage />} />
+            <Route path="edit-domain" element={<EditDomainPage />} />
+          </Route>
+        </Routes>
+      </main>
+    </div>
   );
 }
 

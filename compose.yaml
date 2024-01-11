@@ -28,7 +28,7 @@ services:
   react-frontend:
     container_name: react-frontend
     build:
-      context: ./frontend
+      context: ./test-frontend
       dockerfile: Dockerfile
     networks:
       - backend

@@ -11,8 +11,8 @@ COPY package.json ./
 RUN npm install
 COPY . .
 # Define environment variable
-ENV PORT 3000
+EXPOSE 5173
 
 # Start the application using npm start
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "dev", "--host"]
 

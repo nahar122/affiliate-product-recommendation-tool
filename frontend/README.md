@@ -1,70 +1,90 @@
-# Getting Started with Create React App
+<p align="center">
+  <a href="https://clerk.com?utm_source=github&utm_medium=clerk_docs" target="_blank" rel="noopener noreferrer">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="./public/light-logo.png">
+      <img alt="Clerk Logo for light background" src="./public/dark-logo.png" height="64">
+    </picture>
+  </a>
+  <br />
+</p>
+<div align="center">
+  <h1>
+    Clerk and React Quickstart 
+  </h1>  
+  <a href="https://www.npmjs.com/package/@clerk/clerk-js">
+    <img alt="Downloads" src="https://img.shields.io/npm/dm/@clerk/clerk-js" />
+  </a>
+  <a href="https://discord.com/invite/b5rXHjAg7A">
+    <img alt="Discord" src="https://img.shields.io/discord/856971667393609759?color=7389D8&label&logo=discord&logoColor=ffffff" />
+  </a>
+  <a href="https://twitter.com/clerkdev">
+    <img alt="Twitter" src="https://img.shields.io/twitter/url.svg?label=%40clerkdev&style=social&url=https%3A%2F%2Ftwitter.com%2Fclerkdev" />
+  </a> 
+  <br />
+  <br />
+  <img alt="Clerk Hero Image" src="./public/hero.png">
+</div>
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Introduction
 
-## Available Scripts
+Clerk is a developer-first authentication and user management solution. It provides pre-built React components and hooks for sign-in, sign-up, user profile, and organization management. Clerk is designed to be easy to use and customize, and can be dropped into any React application.
 
-In the project directory, you can run:
+After following the quickstart you'll have learned how to:
 
-### `npm start`
+- Set up a React app with Vite
+- Install `@clerk/clerk-react`
+- Set environment keys
+- Wrap your React app in `<ClerkProvider />`
+- Embed the `<UserButton />` and `<SignInButton />`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+<!-- TODO: Include information about the different branches of this repository -->
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Deploy
 
-### `npm test`
+Easily deploy the template to Vercel with the button below. You will need to set the required environment variables in the Vercel dashboard.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fclerkinc%2Fclerk-react-quickstart&env=VITE_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY&envDescription=Clerk%20API%20keys&envLink=https%3A%2F%2Fclerk.com%2Fdocs%2Fquickstart%2Freact&redirect-url=https%3A%2F%2Fclerk.com%2Fdocs%2Fquickstart%2Freact)
 
-### `npm run build`
+## Running the template
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+git clone https://github.com/clerkinc/clerk-react-quickstart
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+To run the example locally, you need to:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Sign up for a Clerk account at [https://clerk.com](https://dashboard.clerk.com/sign-up?utm_source=DevRel&utm_medium=docs&utm_campaign=templates&utm_content=10-24-2023&utm_term=clerk-react-quickstart).
 
-### `npm run eject`
+2. Go to the [Clerk dashboard](https://dashboard.clerk.com?utm_source=DevRel&utm_medium=docs&utm_campaign=templates&utm_content=10-24-2023&utm_term=clerk-react-quickstart) and create an application.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+3. Set the required Clerk environment variables as shown in [the example `env` file](./.env.sample).
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+4. `npm install` the required dependencies.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+5. `npm run dev` to launch the development server.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Learn more
 
-## Learn More
+To learn more about Clerk and React, check out the following resources:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- [Quickstart: Get started with React and Clerk](https://clerk.com/docs/quickstarts/react?utm_source=DevRel&utm_medium=docs&utm_campaign=templates&utm_content=10-24-2023&utm_term=clerk-react-quickstart)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- [Clerk Documentation](https://clerk.com/docs?utm_source=DevRel&utm_medium=docs&utm_campaign=templates&utm_content=10-24-2023&utm_term=clerk-react-quickstart)
+- [Vite Documentation](https://vitejs.dev/guide/)
 
-### Code Splitting
+## Found an issue?
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+If you have found an issue with the quickstart, please create an [issue](https://github.com/clerk/clerk-react-quickstart/issues).
 
-### Analyzing the Bundle Size
+If it's a quick fix, such as a misspelled word or a broken link, feel free to skip creating an issue.  
+Go ahead and create a [pull request](https://github.com/clerk/clerk-react-quickstart/pulls) with the solution. :rocket:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Want to leave feedback?
 
-### Making a Progressive Web App
+Feel free to create an [issue](https://github.com/clerk/clerk-react-quickstart/issues) with the **feedback** label. Our team will take a look at it and get back to you as soon as we can!
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Connect with us
 
-### Advanced Configuration
+You can discuss ideas, ask questions, and meet others from the community in our [Discord](https://discord.com/invite/b5rXHjAg7A).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+If you prefer, you can also find support through our [Twitter](https://twitter.com/ClerkDev), or you can [email](mailto:support@clerk.dev) us!

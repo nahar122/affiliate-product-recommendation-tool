@@ -31,26 +31,30 @@ async function scrapeWebPage() {
       return;
     }
 
-    if (firstParagraphElement && data.injected_article_paragraph) {
-      const newParagraph = document.createElement("div");
-      newParagraph.innerHTML = insertLineBreakAfterThreeSentences(
-        data.injected_article_paragraph
-      );
-      const newParagraphElement = newParagraph.firstChild;
+    if (firstParagraphElement && html_string) {
+      // Create a container to hold the HTML string
+      const container = document.createElement("div");
+      container.innerHTML = html_string;
+
+      // Extract the first element (assumed to be the new paragraph) from the container
+      const newParagraphElement = container.firstElementChild;
 
       if (newParagraphElement) {
-        newParagraphElement.className = firstParagraphElement.className;
-        newParagraphElement.style.cssText = firstParagraphElement.style.cssText;
-      }
+        // Merge classes from both elements
+        let mergedClasses =
+          `${firstParagraphElement.className} ${newParagraphElement.className}`.trim();
 
-      firstParagraphElement.replaceWith(newParagraphElement);
+        // Replace the original paragraph with the new content
+        firstParagraphElement.replaceWith(container);
+
+        // Apply the merged classes to the new paragraph element
+        newParagraphElement.className = mergedClasses;
+      }
     } else {
-      console.error(
-        "Failed to retrieve amazon affiliate data for this article."
-      );
+      console.error("Failed to inject content.");
     }
 
-    console.log("Successfully added amazon affiliate products.");
+    console.log("Content injection successful.");
   } catch (error) {
     console.error("Error scraping the web page:", error);
   }
@@ -108,8 +112,3 @@ function insertLineBreakAfterThreeSentences(htmlString) {
 document.addEventListener("DOMContentLoaded", (event) => {
   scrapeWebPage();
 });
-
-// let x = insertLineBreakAfterThreeSentences(
-//   "<p class='' style=''>Learning programming languages is a good option to find a good job. Above all, if you dedicate yourself to this. Because for no one is a secret that we live in times where many applications are used. That’s why this post will teach you how to install <a href='https://www.osradar.com/install-rust-programming-language-ubuntu-debian/'>Rust</a> on Ubuntu 20.04 / Debian 10. If you're looking to dive deep into Rust programming, you might be interested in <a href='https://www.amazon.com/dp/1718503105?&amp;_encoding=UTF8&amp;tag=synth0f-20'>The Rust Programming Language, 2nd Edition</a> or <a href='https://www.amazon.com/dp/1492052590?&amp;_encoding=UTF8&amp;tag=synth0f-20'>Programming Rust: Fast, Safe Systems Development</a>. Additionally, if you want to explore practical examples, consider <a href='https://www.amazon.com/dp/1788390636?&amp;_encoding=UTF8&amp;tag=synth0f-20'>Rust Programming By Example: Enter the world of Rust by building engaging, concurrent, reactive, and robust applications</a> or <a href='https://www.amazon.com/dp/B0742HGLWB?&amp;_encoding=UTF8&amp;tag=synth0f-20'>Rust Essentials: A quick guide to writing fast, safe, and concurrent systems and applications, 2nd Edition</a>. For dealing with rust in a different context, you might find <a href='https://www.amazon.com/dp/B0000AY8PB?&amp;_encoding=UTF8&amp;tag=synth0f-20'>Star brite Rust Eater &amp; Converter - Chemically Converts Rust Into Steel</a> useful.</p>"
-// );
-// console.log(x);

@@ -22,7 +22,7 @@ const DomainTable: React.FC<DomainTableProps> = ({
     setCurrentPageNumber(pageNumber);
   };
   return (
-    <div className="overflow-auto w-full">
+    <div className="overflow-auto w-full flex flex-col justify-center">
       <table className="table-lg w-full">
         {/* head */}
         <thead>
@@ -53,7 +53,7 @@ const DomainTable: React.FC<DomainTableProps> = ({
             ))}
         </tbody>
       </table>
-      <div className="join my-4">
+      <div className="join my-4 mx-auto">
         <button
           onClick={() => handlePageChange(0)}
           className={`join-item btn ${currentPage === 0 ? "btn-disabled" : ""}`}

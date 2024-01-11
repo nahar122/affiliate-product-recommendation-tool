@@ -1,6 +1,5 @@
 import DomainTable from "../components/DomainTable";
 import axios from "../axios";
-import { useActionData } from "react-router-dom";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Domain } from "../types/Domain";
 import UrlTable from "../components/UrlTable";
@@ -52,7 +51,7 @@ const EditDomainPage = () => {
       return false;
     }
     try {
-      console.log(process.env.REACT_APP_API_URL);
+      console.log(import.meta.env.REACT_APP_API_URL);
       const response = await axios.patch(`/edit-url/${currentURL.id}`, {
         injected_article_paragraph: updatedText,
       });
